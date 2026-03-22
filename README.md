@@ -187,7 +187,7 @@ After a scan, the tool generates files in `output/reports/scan_YYYYMMDD_HHMMSS/`
 
 ```bash
 python3 -m pytest tests/ -v
-
+```
 
 ### Adding Custom Rules
 
