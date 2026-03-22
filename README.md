@@ -61,3 +61,16 @@ Structured findings in ```output/reports/scan_YYYYMMDD_HHMMSS/``` including exec
 | `scan` | Ingest logs, apply detection rules, generate findings | Primary audit execution |
 | `report` | Regenerate reports from existing JSON findings | Report customization without re‑scanning |
 | `list-rules` | Display loaded detection rules with metadata | Audit planning and scope validation |
+
+
+### Scan Options
+```bash
+python nexus-audit.py scan \
+    --log-file PATH          # Single log file
+    --log-dir PATH           # Directory of .log/.txt files
+    --rules PATH             # YAML rule directory (default: rules/)
+    --org "Name"             # Organization for report headers
+    --format {markdown,json,csv,all}
+    --output-dir PATH        # Custom output location
+```
+---
