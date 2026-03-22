@@ -29,15 +29,22 @@ Nexus‑Audit is a modular, CLI‑based security auditing system engineered for 
 
 ---
 
-## Responsible Use
-This tool is provided for educational and authorized professional use only.
+## Quick Start
 
-Use only on systems and data you are explicitly authorized to analyze.
+```bash
+# 1. Clone repository
+git clone https://github.com/yourusername/nexus-audit.git
+cd nexus-audit
 
-Comply with all applicable laws, regulations, and organizational policies.
+# 2. Create virtual environment
+python3 -m venv venv && source venv/bin/activate   # On Windows: venv\Scripts\activate
 
-Validate findings through manual review before control decisions.
+# 3. Install dependencies
+pip install -r requirements.txt
 
-Test thoroughly in non‑production environments prior to operational deployment.
-
-No warranty provided for accuracy or completeness.
+# 4. Execute baseline audit scan
+python nexus-audit.py scan \
+    --log-file sample_logs/auth.log \
+    --rules rules/ \
+    --org "Your Organization" \
+    --format all
