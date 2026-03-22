@@ -51,4 +51,5 @@ python nexus-audit.py scan \
 ```
 ---
 
-## Output: Structured findings in output/reports/scan_YYYYMMDD_HHMMSS/ including executive report, machine‑readable JSON, and CSV for analysis.
+### Output: 
+Structured findings in ```bashoutput/reports/scan_YYYYMMDD_HHMMSS/``` including executive report, machine‑readable JSON, and CSV for analysis.
