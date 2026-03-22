@@ -48,7 +48,7 @@ python nexus-audit.py scan \
     --rules rules/ \
     --org "Your Organization" \
     --format all
-
+```
 ---
 
 ## Output: Structured findings in output/reports/scan_YYYYMMDD_HHMMSS/ including executive report, machine‑readable JSON, and CSV for analysis.
