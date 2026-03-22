@@ -74,3 +74,24 @@ python nexus-audit.py scan \
     --output-dir PATH        # Custom output location
 ```
 ---
+## Architecture
+nexus-audit/
+├── nexus-audit.py          # CLI entry point
+├── engine/                 # Core audit engine
+│   ├── ingestion.py        # Log normalization & parsing
+│   ├── rule_engine.py      # YAML rule evaluation logic
+│   ├── findings.py         # Finding structure & risk scoring
+│   ├── reporter.py         # Multi-format report generation
+│   └── theme.py            # Professional UI formatting
+├── rules/                  # Detection rule library
+│   ├── authentication.yml  # Access control & identity rules
+│   ├── network.yml         # Network security monitoring
+│   └── system.yml          # System integrity controls
+├── config/                 # Configuration management
+├── sample_logs/            # Test data for validation
+├── scripts/                # Operational utilities
+│   └── collect_logs.py     # Secure remote log collection (SSH)
+├── tests/                  # Unit test suite
+└── output/                 # Generated reports & audit logs
+    ├── reports/            # Findings (MD/JSON/CSV)
+    └── logs/               # Execution audit trails
