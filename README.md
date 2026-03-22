@@ -17,6 +17,7 @@ Nexus‑Audit is a modular, CLI‑based security auditing system engineered for 
 
 ---
 
+
 ## Key Capabilities
 
 | Feature | Business Value |
@@ -28,6 +29,7 @@ Nexus‑Audit is a modular, CLI‑based security auditing system engineered for 
 | **Complete Audit Trail** | Execution logging ensures tool accountability and supports quality assurance reviews. |
 
 ---
+
 
 ## Quick Start
 
@@ -74,7 +76,10 @@ python nexus-audit.py scan \
     --output-dir PATH        # Custom output location
 ```
 ---
+
+
 ## Architecture
+```bash
 nexus-audit/
 ├── nexus-audit.py          # CLI entry point
 ├── engine/                 # Core audit engine
@@ -95,3 +100,139 @@ nexus-audit/
 └── output/                 # Generated reports & audit logs
     ├── reports/            # Findings (MD/JSON/CSV)
     └── logs/               # Execution audit trails
+
+```
+---
+
+## Detection Rule Library
+Rules are declarative YAML configurations defining control objectives, detection logic, and risk parameters.
+
+### Rule Structure
+```yaml
+rules:
+  - id: "AUTH-001"
+    name: "Multiple Failed SSH Login Attempts"
+    description: "Detects potential brute force attacks against authentication controls"
+    category: "Authentication"
+    risk: "High"
+    mitre_id: "T1110.001"          # Brute Force: Password Guessing
+    mitre_tactic: "Credential Access"
+    impact: "Potential account compromise and unauthorized system access"
+    recommendation: "Implement account lockout policies; enable multi-factor authentication"
+    condition:
+      type: threshold
+      pattern: "Failed password"
+      group_by: source_ip
+      count: 5
+      window_seconds: 120
+
+```
+---
+
+### Condition Types
+
+| Type | Application | Example |
+|------|-------------|---------|
+| `pattern_match` | Simple control verification | Error keyword detection |
+| `regex_match` | Complex log format parsing | Structured data extraction |
+| `threshold` | Anomaly‑based detection | Brute force, DoS patterns |
+| `field_value` | Specific value validation | Privilege escalation events |
+
+---
+
+### Control Coverage
+
+#### Authentication (`AUTH-*`)
+- Brute force detection (AUTH‑001)
+- Compromise indicators (AUTH‑002)
+- Invalid user attempts (AUTH‑003)
+- Privileged access monitoring (AUTH‑004, AUTH‑005)
+- Account lifecycle events (AUTH‑006)
+
+#### Network Security (`NET-*`)
+- Service availability monitoring (NET‑001)
+- Reconnaissance detection (NET‑002)
+- Connection anomaly analysis (NET‑003, NET‑004)
+
+#### System Integrity (`SYS-*`)
+- Scheduled task modification (SYS‑001)
+- Critical file change detection (SYS‑002)
+- Service tampering alerts (SYS‑003)
+- Kernel‑level activity (SYS‑004)
+- Boot configuration changes (SYS‑005)
+
+---
+
+## Output Formats
+
+After a scan, the tool generates files in `output/reports/scan_YYYYMMDD_HHMMSS/`:
+
+- **Executive Report** (`audit_report.md`)  
+  Risk summary with quantitative breakdowns, control effectiveness assessment, detailed findings with evidence excerpts, and remediation roadmap with priority rankings.
+
+- **Structured Data** (`findings.json`)  
+  Complete finding metadata, raw evidence preservation, scope and boundary documentation – SIEM integration ready.
+
+- **Analysis Dataset** (`findings.csv`)  
+  Spreadsheet‑compatible format, pivot‑table ready for trend analysis, risk scoring for heat mapping.
+
+- **Execution Log** (`execution_YYYYMMDD_HHMMSS.log`)  
+  Complete audit trail of tool operations, quality assurance documentation, chain of custody for evidence handling.
+
+---
+
+## Development
+
+### Testing
+
+```bash
+python3 -m pytest tests/ -v
+
+
+### Adding Custom Rules
+
+1. Create a `.yml` file in `rules/` or extend existing categories.
+2. Follow the schema: `id`, `name`, `description`, `category`, `risk`, `mitre_id`, `condition`.
+3. Validate with sample logs.
+4. Rules auto‑load on execution.
+
+### Standards Compliance
+
+- PEP 8 code style
+- Type hints for maintainability
+- Comprehensive docstrings
+- Audit trail logging throughout
+
+---
+
+## Contributing
+
+1. Fork the repository.
+2. Create a feature branch: `git checkout -b feature/control-enhancement`
+3. Add tests for new detection capabilities.
+4. Ensure all tests pass: `pytest`
+5. Submit a pull request with detailed change description.
+
+**Focus Areas**: Security control coverage, audit framework alignment, reporting enhancements.
+
+---
+
+## Responsible Use
+
+This tool is provided for educational and authorized professional use only.
+
+- Use only on systems and data you are explicitly authorized to analyze.
+- Comply with all applicable laws, regulations, and organizational policies.
+- Validate findings through manual review before control decisions.
+- Test thoroughly in non‑production environments prior to operational deployment.
+- No warranty provided for accuracy or completeness.
+
+---
+
+## License
+
+MIT License — See [LICENSE](LICENSE) for details.
+
+---
+
+**Nexus-Audit** — Empowering defensible security audits through automated log intelligence.
