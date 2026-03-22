@@ -53,3 +53,10 @@ python nexus-audit.py scan \
 
 **Output:** 
 Structured findings in ```output/reports/scan_YYYYMMDD_HHMMSS/``` including executive report, machine‑readable JSON, and CSV for analysis.
+
+## Command Reference
+### Core Operations
+Command	Purpose	Use Case
+scan	Ingest logs, apply detection rules, generate findings	Primary audit execution
+report	Regenerate reports from existing JSON findings	Report customization without re‑scanning
+list-rules	Display loaded detection rules with metadata	Audit planning and scope validation
