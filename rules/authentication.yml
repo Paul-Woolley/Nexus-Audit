@@ -1,0 +1,196 @@
+# =============================================================================
+# authentication.yml  --  Nexus Audit Tool Detection Rules
+# Category: Authentication & Access Control
+# =============================================================================
+# These rules detect common authentication attacks and access control
+# violations observable in /var/log/auth.log and similar sources.
+#
+# Rule IDs in this file: AUTH-001 through AUTH-006
+# MITRE ATT&CK Coverage: T1110.001, T1110.003, T1078, T1136
+# =============================================================================
+
+rules:
+
+  - id: "AUTH-001"
+    name: "Multiple Failed SSH Login Attempts"
+    description: >
+      Detects repeated failed SSH authentication attempts from a single
+      source IP address. This pattern is consistent with brute force or
+      password spraying attacks targeting SSH services.
+    category: "Authentication"
+    risk: "High"
+    mitre_id: "T1110.001"
+    mitre_tactic: "Credential Access"
+    impact: >
+      An attacker systematically attempting to guess user credentials via
+      SSH. Successful compromise could grant persistent remote access to
+      the system, enabling data exfiltration, lateral movement, or
+      ransomware deployment.
+    recommendation: >
+      1. Implement SSH account lockout after 5 consecutive failures (PAM
+         pam_faillock or fail2ban).
+      2. Restrict SSH access to authorised IP ranges via firewall rules or
+         /etc/hosts.allow.
+      3. Disable password-based SSH authentication and enforce key-based
+         authentication only.
+      4. Block or rate-limit the offending source IP(s) immediately.
+      5. Review /var/log/auth.log for any successful logins from the same
+         source IP following the failed attempts.
+    tags:
+      - brute_force
+      - ssh
+      - credential_access
+    condition:
+      type: threshold
+      pattern: 'Failed password'
+      group_by: source_ip
+      count: 5
+      window_seconds: 120
+
+  - id: "AUTH-002"
+    name: "SSH Login Success After Multiple Failures"
+    description: >
+      Detects a successful SSH login that follows multiple failed attempts.
+      This pattern strongly suggests a successful brute force attack where
+      valid credentials were discovered after repeated guessing.
+    category: "Authentication"
+    risk: "Critical"
+    mitre_id: "T1110.001"
+    mitre_tactic: "Credential Access"
+    impact: >
+      An attacker has likely obtained valid credentials through brute force.
+      The system is now compromised. The attacker may establish persistence,
+      escalate privileges, or move laterally within the environment.
+    recommendation: >
+      1. Immediately terminate any active SSH sessions from the suspected
+         source IP.
+      2. Rotate credentials for all accounts that accepted connections from
+         the source IP.
+      3. Review all commands executed during the suspected session
+         (check ~/.bash_history, /var/log/auth.log, /var/log/secure).
+      4. Initiate an incident response procedure.
+      5. Perform forensic analysis to determine the scope of access.
+    tags:
+      - brute_force
+      - successful_compromise
+      - incident_response
+    condition:
+      type: pattern_match
+      pattern: 'Accepted password'
+
+  - id: "AUTH-003"
+    name: "Invalid User Login Attempts"
+    description: >
+      Detects SSH login attempts using usernames that do not exist on the
+      system. This is indicative of username enumeration or a brute force
+      attack targeting common account names (root, admin, test, etc.).
+    category: "Authentication"
+    risk: "Medium"
+    mitre_id: "T1110.003"
+    mitre_tactic: "Credential Access"
+    impact: >
+      Attackers are probing the system for valid usernames. While this does
+      not indicate a successful compromise, it suggests active reconnaissance
+      that may escalate to targeted brute force attacks.
+    recommendation: >
+      1. Block the source IP(s) generating invalid user attempts at the
+         firewall or using fail2ban.
+      2. Ensure SSH does not reveal whether a username exists (UsePrivilegeSeparation
+         and logging settings in sshd_config).
+      3. Disable or remove unnecessary default accounts (root, admin, test).
+      4. Enable SSH banner warnings to deter attackers.
+    tags:
+      - enumeration
+      - ssh
+      - reconnaissance
+    condition:
+      type: pattern_match
+      pattern: 'Invalid user'
+
+  - id: "AUTH-004"
+    name: "Root Account Direct Login"
+    description: >
+      Detects successful or attempted direct login to the root account
+      via SSH. Best practice and most security policies prohibit direct
+      root login; administrators should use a standard account and elevate
+      privileges via sudo.
+    category: "Authentication"
+    risk: "High"
+    mitre_id: "T1078"
+    mitre_tactic: "Initial Access"
+    impact: >
+      Direct root login bypasses audit trails for privilege escalation,
+      grants immediate unrestricted access to the system, and violates
+      the principle of least privilege. If the root password is compromised,
+      the entire system is exposed without any additional barriers.
+    recommendation: >
+      1. Set PermitRootLogin no in /etc/ssh/sshd_config and restart sshd.
+      2. Create named administrator accounts and grant sudo access as required.
+      3. Enforce MFA for all privileged account access.
+      4. Review whether root logins were successful and investigate the source.
+    tags:
+      - privileged_access
+      - root
+      - policy_violation
+    condition:
+      type: regex_match
+      pattern: '(Accepted|Failed) password for root'
+      flags: IGNORECASE
+
+  - id: "AUTH-005"
+    name: "Sudo Privilege Escalation"
+    description: >
+      Detects use of the sudo command to execute commands with elevated
+      privileges. While legitimate use is expected, this rule provides
+      an audit trail of all privilege escalation events for review.
+    category: "Authentication"
+    risk: "Low"
+    mitre_id: "T1548.003"
+    mitre_tactic: "Privilege Escalation"
+    impact: >
+      Privilege escalation via sudo enables users to execute commands with
+      root or other elevated privileges. Improper sudo configuration or
+      misuse can lead to unauthorised system changes or data access.
+    recommendation: >
+      1. Review the sudoers configuration (/etc/sudoers, /etc/sudoers.d/)
+         to ensure least privilege is enforced.
+      2. Avoid granting unrestricted sudo (NOPASSWD: ALL) to any account.
+      3. Enable sudo logging to a centralised log management system.
+      4. Periodically audit sudo usage logs for anomalous patterns.
+    tags:
+      - privilege_escalation
+      - sudo
+      - audit_trail
+    condition:
+      type: pattern_match
+      pattern: 'sudo:'
+
+  - id: "AUTH-006"
+    name: "New User Account Created"
+    description: >
+      Detects the creation of a new user account on the system. Unauthorised
+      account creation is a common persistence technique used by attackers
+      to maintain access after an initial compromise.
+    category: "Authentication"
+    risk: "High"
+    mitre_id: "T1136.001"
+    mitre_tactic: "Persistence"
+    impact: >
+      Unauthorised account creation provides an attacker with persistent
+      access to the system using legitimate credentials, which may not be
+      detected by tools monitoring for exploitation techniques.
+    recommendation: >
+      1. Verify that all newly created accounts were authorised by the
+         appropriate change management process.
+      2. Remove any unauthorised accounts immediately (userdel -r <username>).
+      3. Investigate the source of the account creation (who executed useradd
+         and from what session).
+      4. Implement change management controls for user account administration.
+    tags:
+      - persistence
+      - account_creation
+      - change_management
+    condition:
+      type: regex_match
+      pattern: 'useradd|new user|new group'
+      flags: IGNORECASE

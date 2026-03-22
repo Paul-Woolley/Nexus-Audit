@@ -1,0 +1,141 @@
+# =============================================================================
+# network.yml  --  Nexus Audit Tool Detection Rules
+# Category: Network & Connection Monitoring
+# =============================================================================
+# These rules detect network-based threats and connection anomalies
+# observable in system logs, network logs, and Apache access logs.
+#
+# Rule IDs in this file: NET-001 through NET-004
+# MITRE ATT&CK Coverage: T1046, T1190, T1071
+# =============================================================================
+
+rules:
+
+  - id: "NET-001"
+    name: "Web Server Error Rate Spike"
+    description: >
+      Detects a high volume of HTTP 404 (Not Found) responses from the
+      web server. A spike in 404 errors from a single source is consistent
+      with automated directory and file enumeration tools such as Dirsearch,
+      Gobuster, or Nikto.
+    category: "Network"
+    risk: "Medium"
+    mitre_id: "T1083"
+    mitre_tactic: "Discovery"
+    impact: >
+      Automated web enumeration can reveal hidden directories, admin panels,
+      backup files, and configuration files that should not be publicly
+      accessible. Discovered resources may be targeted for exploitation
+      in subsequent attack phases.
+    recommendation: >
+      1. Block or rate-limit the source IP(s) generating excessive 404s.
+      2. Review discovered paths to ensure no sensitive content is exposed.
+      3. Implement a Web Application Firewall (WAF) to detect and block
+         automated scanning tools.
+      4. Remove any backup files, default pages, or unnecessary application
+         paths from the web root.
+    tags:
+      - web_enumeration
+      - scanning
+      - reconnaissance
+    condition:
+      type: threshold
+      pattern: '" 404'
+      group_by: source_ip
+      count: 10
+      window_seconds: 60
+
+  - id: "NET-002"
+    name: "Web Server Vulnerability Scanner Detected"
+    description: >
+      Detects requests with User-Agent strings associated with known web
+      vulnerability scanning tools, including Nikto, SQLMap, and Nessus.
+      These tools are used to identify vulnerabilities in web applications.
+    category: "Network"
+    risk: "High"
+    mitre_id: "T1190"
+    mitre_tactic: "Initial Access"
+    impact: >
+      Active vulnerability scanning indicates an attacker or tester is
+      probing the web application for known CVEs, misconfiguration issues,
+      SQL injection points, and other exploitable vulnerabilities. A
+      successful exploit could lead to remote code execution or data breach.
+    recommendation: >
+      1. Block requests from recognised scanner User-Agent strings at the
+         WAF or web server level.
+      2. Immediately review scan results (if accessible) to identify any
+         vulnerabilities discovered.
+      3. Patch any identified vulnerabilities according to severity.
+      4. Implement input validation and output encoding for the web application.
+    tags:
+      - scanner
+      - vulnerability_assessment
+      - web_attack
+    condition:
+      type: regex_match
+      pattern: '(nikto|sqlmap|nessus|masscan|acunetix|burpsuite|ZAP)'
+      flags: IGNORECASE
+
+  - id: "NET-003"
+    name: "Connection from Private IP Range to External Port"
+    description: >
+      Detects unexpected network connections that may indicate data
+      exfiltration, command-and-control (C2) communication, or
+      policy violations. Monitors for connections on non-standard ports.
+    category: "Network"
+    risk: "Medium"
+    mitre_id: "T1071"
+    mitre_tactic: "Command and Control"
+    impact: >
+      Connections to external systems on non-standard ports may indicate
+      malware C2 communication, data exfiltration, or tunnelling of traffic
+      to evade network monitoring. This warrants investigation to determine
+      the nature and purpose of the connection.
+    recommendation: >
+      1. Investigate the destination IP and port to determine legitimacy.
+      2. Implement egress filtering to restrict outbound connections to
+         only required ports and destinations.
+      3. Deploy network monitoring to detect and alert on anomalous
+         outbound connections.
+      4. Ensure all outbound traffic passes through a proxy or firewall
+         with inspection capabilities.
+    tags:
+      - c2
+      - exfiltration
+      - network_policy
+    condition:
+      type: regex_match
+      pattern: 'connection (established|accepted|from)'
+      flags: IGNORECASE
+
+  - id: "NET-004"
+    name: "SSH Port Forwarding or Tunnelling Detected"
+    description: >
+      Detects SSH port forwarding and tunnelling activity. While legitimate
+      uses exist, SSH tunnelling is also used by attackers to bypass firewall
+      rules, access internal systems, and exfiltrate data covertly.
+    category: "Network"
+    risk: "High"
+    mitre_id: "T1572"
+    mitre_tactic: "Command and Control"
+    impact: >
+      SSH tunnelling can completely bypass network security controls by
+      wrapping arbitrary traffic inside encrypted SSH connections. This
+      technique is used for lateral movement, accessing restricted systems,
+      and exfiltrating data without triggering traditional detection.
+    recommendation: >
+      1. Disable SSH tunnelling if not required: set AllowTcpForwarding no
+         and AllowStreamLocalForwarding no in sshd_config.
+      2. Monitor for SSH sessions with port forwarding flags in process
+         listings.
+      3. Implement network-level controls to detect encrypted tunnel patterns.
+      4. If tunnelling is required operationally, restrict it to specific
+         authorised accounts and destinations.
+    tags:
+      - tunnelling
+      - lateral_movement
+      - ssh
+    condition:
+      type: regex_match
+      pattern: '(tcpip-forward|direct-tcpip|forwarded)'
+      flags: IGNORECASE

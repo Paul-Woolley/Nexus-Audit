@@ -1,0 +1,171 @@
+# =============================================================================
+# system.yml  --  Nexus Audit Tool Detection Rules
+# Category: System Integrity & Configuration
+# =============================================================================
+# These rules detect system-level threats including persistence mechanisms,
+# privilege escalation, and configuration changes observable in syslog,
+# audit logs, and system event logs.
+#
+# Rule IDs in this file: SYS-001 through SYS-005
+# MITRE ATT&CK Coverage: T1053.003, T1543.002, T1562, T1070
+# =============================================================================
+
+rules:
+
+  - id: "SYS-001"
+    name: "Suspicious Cron Job Modification"
+    description: >
+      Detects the creation or modification of cron jobs. Attackers commonly
+      use cron jobs as a persistence mechanism to ensure malicious code
+      re-executes even after the initial attack vector is remediated.
+    category: "System Integrity"
+    risk: "High"
+    mitre_id: "T1053.003"
+    mitre_tactic: "Persistence"
+    impact: >
+      A malicious cron job provides persistent, scheduled execution of
+      attacker-controlled code. This can enable continuous data exfiltration,
+      periodic lateral movement, or re-infection after incident response
+      activities.
+    recommendation: >
+      1. Audit all cron jobs immediately: review /etc/crontab, /etc/cron.d/,
+         /var/spool/cron/, and user-level crontabs (crontab -l -u <user>).
+      2. Remove any unauthorised cron entries.
+      3. Implement file integrity monitoring on cron directories.
+      4. Restrict crontab modification via /etc/cron.allow.
+      5. Ensure all cron job changes go through an approved change management
+         process.
+    tags:
+      - persistence
+      - cron
+      - scheduled_task
+    condition:
+      type: regex_match
+      pattern: 'CRON.*CMD'
+      flags: IGNORECASE
+
+  - id: "SYS-002"
+    name: "System Service Modification"
+    description: >
+      Detects the creation or modification of system services (systemd units,
+      init scripts). Installing malicious services is a common technique for
+      achieving persistent privileged code execution.
+    category: "System Integrity"
+    risk: "High"
+    mitre_id: "T1543.002"
+    mitre_tactic: "Persistence"
+    impact: >
+      A malicious system service runs with root or service-level privileges
+      and starts automatically on boot. This provides an attacker with
+      persistent, privileged, and resilient access that survives reboots
+      and many remediation attempts.
+    recommendation: >
+      1. Review all recently created or modified service unit files in
+         /etc/systemd/system/ and /lib/systemd/system/.
+      2. Use systemctl list-units to identify unexpected services.
+      3. Remove unauthorised services and investigate their origin.
+      4. Implement file integrity monitoring on systemd directories.
+      5. Require change management approval for service installations.
+    tags:
+      - persistence
+      - service
+      - systemd
+    condition:
+      type: regex_match
+      pattern: '(systemctl|service).*(start|enable|install|daemon-reload)'
+      flags: IGNORECASE
+
+  - id: "SYS-003"
+    name: "Security Tool or Log Tampering Detected"
+    description: >
+      Detects attempts to stop, disable, or modify security tools and logging
+      services. Attackers frequently disable antivirus, firewall, and logging
+      services to evade detection and remove evidence of their activities.
+    category: "System Integrity"
+    risk: "Critical"
+    mitre_id: "T1562"
+    mitre_tactic: "Defence Evasion"
+    impact: >
+      Disabling security controls removes the organisation's ability to detect
+      and respond to attacks. Tampering with logs destroys audit evidence and
+      may violate regulatory compliance requirements. This is a strong indicator
+      of an active compromise or malicious insider activity.
+    recommendation: >
+      1. Immediately investigate the source and context of the tampering attempt.
+      2. Verify that all security services are running and functioning correctly.
+      3. Restore any tampered or deleted logs from backup.
+      4. Implement log forwarding to a centralised, write-protected SIEM so
+         that local log deletion cannot destroy audit evidence.
+      5. Initiate incident response procedures.
+    tags:
+      - defence_evasion
+      - log_tampering
+      - critical_incident
+    condition:
+      type: regex_match
+      pattern: '(stop|disable|kill).*(syslog|rsyslog|auditd|ufw|iptables|fail2ban)'
+      flags: IGNORECASE
+
+  - id: "SYS-004"
+    name: "Log Clearing or Deletion Detected"
+    description: >
+      Detects events suggesting log files have been cleared, truncated, or
+      deleted. Attackers clear logs to remove evidence of their activities
+      and to hinder incident response and forensic analysis.
+    category: "System Integrity"
+    risk: "Critical"
+    mitre_id: "T1070.002"
+    mitre_tactic: "Defence Evasion"
+    impact: >
+      Deletion or clearing of log files destroys audit evidence, violates
+      compliance requirements (e.g. PCI DSS, ISO 27001 log retention
+      requirements), and significantly hampers incident response. If logs
+      are deleted during an active incident, the full scope of the attack
+      may never be determined.
+    recommendation: >
+      1. Immediately check the integrity of all log files.
+      2. Restore any deleted logs from backup or SIEM.
+      3. Implement write-once or append-only logging.
+      4. Forward all logs in real time to a centralised, access-controlled
+         SIEM system where they cannot be modified locally.
+      5. Trigger an incident response if this event cannot be explained by
+         an authorised change.
+    tags:
+      - defence_evasion
+      - log_deletion
+      - compliance
+    condition:
+      type: regex_match
+      pattern: '(> /var/log|truncate.*log|rm.*\.log|shred.*log)'
+      flags: IGNORECASE
+
+  - id: "SYS-005"
+    name: "Kernel or System Error"
+    description: >
+      Detects kernel-level errors and system crashes which may indicate
+      exploitation attempts, hardware failures, or misconfigured software.
+      Kernel errors can be a symptom of privilege escalation exploits or
+      kernel rootkit activity.
+    category: "System Integrity"
+    risk: "Medium"
+    mitre_id: ""
+    mitre_tactic: ""
+    impact: >
+      Repeated kernel errors may indicate system instability, exploitation
+      attempts targeting kernel vulnerabilities, or hardware failures that
+      could lead to data loss or service outages.
+    recommendation: >
+      1. Review kernel logs (dmesg, /var/log/kern.log) to understand the
+         nature of the errors.
+      2. Apply all outstanding kernel security patches.
+      3. If errors are consistent with known exploits, perform a full
+         forensic analysis.
+      4. Investigate hardware health if errors suggest disk or memory issues.
+    tags:
+      - system_stability
+      - kernel
+      - availability
+    condition:
+      type: regex_match
+      pattern: 'kernel.*(error|panic|oops|segfault|call trace)'
+      flags: IGNORECASE

@@ -1,0 +1,42 @@
+# Sample auth.log -- representative authentication log for testing
+# This file simulates a realistic attack scenario:
+#   1. Port scan / reconnaissance
+#   2. SSH brute force from 192.168.1.105
+#   3. Successful root login after brute force
+#   4. User enumeration attempts
+#   5. Sudo activity
+
+Jan 15 08:00:01 webserver sshd[1001]: Accepted publickey for deploy from 10.0.0.5 port 45210 ssh2
+Jan 15 08:01:12 webserver sshd[1002]: Accepted publickey for deploy from 10.0.0.5 port 45211 ssh2
+Jan 15 08:15:44 webserver sudo:    deploy : TTY=pts/0 ; PWD=/var/www ; USER=root ; COMMAND=/bin/systemctl restart nginx
+Jan 15 09:00:00 webserver sshd[2001]: Failed password for root from 192.168.1.105 port 50001 ssh2
+Jan 15 09:00:03 webserver sshd[2002]: Failed password for root from 192.168.1.105 port 50002 ssh2
+Jan 15 09:00:05 webserver sshd[2003]: Failed password for admin from 192.168.1.105 port 50003 ssh2
+Jan 15 09:00:07 webserver sshd[2004]: Invalid user administrator from 192.168.1.105 port 50004
+Jan 15 09:00:09 webserver sshd[2005]: Failed password for root from 192.168.1.105 port 50005 ssh2
+Jan 15 09:00:11 webserver sshd[2006]: Invalid user postgres from 192.168.1.105 port 50006
+Jan 15 09:00:13 webserver sshd[2007]: Failed password for root from 192.168.1.105 port 50007 ssh2
+Jan 15 09:00:15 webserver sshd[2008]: Invalid user oracle from 192.168.1.105 port 50008
+Jan 15 09:00:17 webserver sshd[2009]: Failed password for root from 192.168.1.105 port 50009 ssh2
+Jan 15 09:00:19 webserver sshd[2010]: Invalid user test from 192.168.1.105 port 50010
+Jan 15 09:00:21 webserver sshd[2011]: Failed password for root from 192.168.1.105 port 50011 ssh2
+Jan 15 09:00:23 webserver sshd[2012]: Failed password for ubuntu from 192.168.1.105 port 50012 ssh2
+Jan 15 09:00:25 webserver sshd[2013]: Invalid user git from 192.168.1.105 port 50013
+Jan 15 09:00:27 webserver sshd[2014]: Failed password for root from 192.168.1.105 port 50014 ssh2
+Jan 15 09:00:29 webserver sshd[2015]: Invalid user backup from 192.168.1.105 port 50015
+Jan 15 09:00:31 webserver sshd[2016]: Failed password for root from 192.168.1.105 port 50016 ssh2
+Jan 15 09:00:45 webserver sshd[2050]: Accepted password for root from 192.168.1.105 port 50050 ssh2
+Jan 15 09:01:03 webserver sudo:    root : TTY=pts/1 ; PWD=/root ; USER=root ; COMMAND=/bin/bash
+Jan 15 09:05:12 webserver useradd[3001]: new user: name=backdoor, UID=1001, GID=1001, home=/home/backdoor, shell=/bin/bash
+Jan 15 09:05:13 webserver sudo:    root : TTY=pts/1 ; PWD=/root ; USER=root ; COMMAND=/usr/sbin/useradd -m -s /bin/bash backdoor
+Jan 15 09:10:00 webserver sudo:    root : TTY=pts/1 ; PWD=/root ; USER=root ; COMMAND=/bin/systemctl stop rsyslog
+Jan 15 10:00:00 webserver sshd[4001]: Accepted publickey for admin from 10.0.0.10 port 55000 ssh2
+Jan 15 10:05:00 webserver sudo:    admin : TTY=pts/2 ; PWD=/home/admin ; USER=root ; COMMAND=/usr/bin/apt-get update
+Jan 15 10:10:00 webserver sshd[5001]: Failed password for jenkins from 203.0.113.42 port 60001 ssh2
+Jan 15 10:10:02 webserver sshd[5002]: Failed password for jenkins from 203.0.113.42 port 60002 ssh2
+Jan 15 10:10:04 webserver sshd[5003]: Failed password for jenkins from 203.0.113.42 port 60003 ssh2
+Jan 15 10:10:06 webserver sshd[5004]: Failed password for jenkins from 203.0.113.42 port 60004 ssh2
+Jan 15 10:10:08 webserver sshd[5005]: Failed password for jenkins from 203.0.113.42 port 60005 ssh2
+Jan 15 10:10:10 webserver sshd[5006]: Failed password for jenkins from 203.0.113.42 port 60006 ssh2
+Jan 15 10:30:00 webserver sshd[6001]: Accepted publickey for deploy from 10.0.0.5 port 45300 ssh2
+Jan 15 10:31:00 webserver sudo:    deploy : TTY=pts/3 ; PWD=/var/www ; USER=root ; COMMAND=/bin/systemctl restart apache2
