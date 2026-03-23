@@ -35,7 +35,7 @@ Nexus‑Audit is a modular, CLI‑based security auditing system engineered for 
 
 ```bash
 # 1. Clone repository
-git clone https://github.com/yourusername/nexus-audit.git
+git clone https://github.com/Paul-Woolley/Nexus-Audit.git
 cd nexus-audit
 
 # 2. Create virtual environment
